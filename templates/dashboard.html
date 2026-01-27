@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Tracking Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+
+        h1 {
+            color: #1a202c;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .btn-actualizar {
+            margin-left: auto;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+
+        .btn-actualizar:hover {
+            transform: translateY(-2px);
+        }
+
+        .resumen {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .card-gradient-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .card-gradient-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .card-gradient-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+
+        .card-gradient-1 .card-title,
+        .card-gradient-2 .card-title,
+        .card-gradient-3 .card-title,
+        .card-gradient-1 .card-value,
+        .card-gradient-2 .card-value,
+        .card-gradient-3 .card-value {
+            color: white;
+        }
+
+        .detalles {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .detalles-header {
+            padding: 30px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .detalles-header h2 {
+            color: #1a202c;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #1F2F58 0%, #517CBE 100%);
+        }
+
+        th {
+            padding: 20px;
+            text-align: left;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #2d3748;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">📊</div>
+            <h1>Email Tracking Dashboard</h1>
+            <button class="btn-actualizar" onclick="cargarDatos()">
+                <span>🔄</span> Actualizar
+            </button>
+        </div>
+
+        <!-- Resumen -->
+        <div class="resumen">
+            <div class="card card-gradient-1">
+                <div class="card-header">
+                    <div class="card-title">Total Aperturas</div>
+                </div>
+                <div class="card-value" id="totalAperturas">0</div>
+            </div>
+
+            <div class="card card-gradient-2">
+                <div class="card-header">
+                    <div class="card-title">Emails Únicos</div>
+                </div>
+                <div class="card-value" id="emailsUnicos">0</div>
+            </div>
+
+            <div class="card card-gradient-3">
+                <div class="card-header">
+                    <div class="card-title">Promedio Aperturas</div>
+                </div>
+                <div class="card-value" id="promedioAperturas">0.0</div>
+            </div>
+        </div>
+
+        <!-- Detalles de Aperturas -->
+        <div class="detalles">
+            <div class="detalles-header">
+                <h2>Detalle de Aperturas</h2>
+            </div>
+            <div id="tablaContainer">
+                <div class="loading">
+                    <span class="spinner">🔄</span>
+                    <p>Cargando datos...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function cargarDatos() {
+            try {
+                const response = await fetch('/stats');
+                const data = await response.json();
+
+                // Actualizar resumen
+                document.getElementById('totalAperturas').textContent = data.total_aperturas;
+                document.getElementById('emailsUnicos').textContent = data.emails_unicos;
+                document.getElementById('promedioAperturas').textContent = data.promedio_aperturas;
+
+                // Actualizar tabla
+                const tablaContainer = document.getElementById('tablaContainer');
+
+                if (data.aperturas.length === 0) {
+                    tablaContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>No hay aperturas registradas aún</p>
+                        </div>
+                    `;
+                } else {
+                    tablaContainer.innerHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID EMAIL</th>
+                                    <th>INSTITUCIÓN</th>
+                                    <th>TIMESTAMP</th>
+                                    <th>IP</th>
+                                    <th>USER-AGENT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.aperturas.map(apertura => `
+                                    <tr>
+                                        <td>${apertura.email_id}</td>
+                                        <td>${apertura.institucion}</td>
+                                        <td>${apertura.timestamp}</td>
+                                        <td>${apertura.ip}</td>
+                                        <td>${apertura.user_agent}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+                document.getElementById('tablaContainer').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <p>Error al cargar los datos</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Cargar datos al inicio
+        cargarDatos();
+
+        // Auto-actualizar cada 30 segundos
+        setInterval(cargarDatos, 30000);
+    </script>
+</body>
+</html>
