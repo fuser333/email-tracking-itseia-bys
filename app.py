@@ -336,6 +336,194 @@ def health():
     })
 
 
+@app.route('/agendar-reunion')
+def agendar_reunion():
+    """
+    Landing page con formulario para agendar reunión
+    Esta página se abre cuando el usuario hace click en el email
+    """
+    return '''
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Agendar Reunión - Alianza ITSEIA-BYS</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+                background: linear-gradient(135deg, #1F2F58 0%, #22D3EE 100%);
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+            }
+            .container {
+                background: white;
+                max-width: 600px;
+                width: 100%;
+                padding: 40px;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 35px;
+            }
+            .header h1 {
+                color: #1F2F58;
+                font-size: 28px;
+                margin: 0 0 10px 0;
+                font-weight: 800;
+            }
+            .header p {
+                color: #64748b;
+                font-size: 16px;
+                margin: 0;
+            }
+            .form-group {
+                margin-bottom: 20px;
+            }
+            .form-group label {
+                display: block;
+                color: #1F2F58;
+                font-weight: 700;
+                margin-bottom: 8px;
+                font-size: 15px;
+            }
+            .form-group input,
+            .form-group select {
+                width: 100%;
+                padding: 14px;
+                border: 2px solid #22D3EE;
+                border-radius: 8px;
+                font-size: 15px;
+                font-family: inherit;
+                transition: all 0.3s ease;
+                box-sizing: border-box;
+            }
+            .form-group input:focus,
+            .form-group select:focus {
+                outline: none;
+                border-color: #0BDD0F;
+                box-shadow: 0 0 0 3px rgba(11, 221, 15, 0.1);
+            }
+            .submit-button {
+                background: linear-gradient(135deg, #0BDD0F 0%, #22D3EE 100%);
+                color: white;
+                padding: 18px 45px;
+                border: none;
+                font-weight: 800;
+                font-size: 17px;
+                border-radius: 12px;
+                cursor: pointer;
+                width: 100%;
+                transition: all 0.3s ease;
+                box-shadow: 0 6px 20px rgba(11, 221, 15, 0.3);
+            }
+            .submit-button:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 12px 32px rgba(11, 221, 15, 0.4);
+            }
+            .submit-button:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+                transform: none;
+            }
+            .info-box {
+                background: #E8F5E9;
+                padding: 20px;
+                border-radius: 12px;
+                margin-bottom: 25px;
+                border-left: 4px solid #0BDD0F;
+            }
+            .info-box p {
+                margin: 0;
+                color: #1F2F58;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+            @media only screen and (max-width: 600px) {
+                .container { padding: 30px 20px; }
+                body { padding: 10px; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Agendar Reunión</h1>
+                <p>Alianza Estratégica ITSEIA - Liceo BYS</p>
+            </div>
+
+            <div class="info-box">
+                <p><strong>Complete este formulario</strong> y nos contactaremos con usted dentro de las próximas <strong>24 horas</strong> para confirmar la reunión.</p>
+            </div>
+
+            <form id="agendarForm" action="/formulario" method="POST">
+                <div class="form-group">
+                    <label for="nombre">Nombre de contacto *</label>
+                    <input type="text" id="nombre" name="nombre" required placeholder="Ej: Juan Pérez">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email de contacto *</label>
+                    <input type="email" id="email" name="email" required placeholder="Ej: juan.perez@colegio.edu.ec">
+                </div>
+
+                <div class="form-group">
+                    <label for="institucion">Institución Educativa *</label>
+                    <input type="text" id="institucion" name="institucion" required placeholder="Nombre del colegio">
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono">Teléfono de contacto *</label>
+                    <input type="tel" id="telefono" name="telefono" required placeholder="Ej: 0987654321">
+                </div>
+
+                <div class="form-group">
+                    <label for="dia">Día preferido para la visita *</label>
+                    <select id="dia" name="dia" required>
+                        <option value="">Seleccione un día</option>
+                        <option value="Lunes">Lunes</option>
+                        <option value="Martes">Martes</option>
+                        <option value="Miércoles">Miércoles</option>
+                        <option value="Jueves">Jueves</option>
+                        <option value="Viernes">Viernes</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="horario">Horario preferido *</label>
+                    <select id="horario" name="horario" required>
+                        <option value="">Seleccione un horario</option>
+                        <option value="08:00 - 10:00">08:00 - 10:00</option>
+                        <option value="10:00 - 12:00">10:00 - 12:00</option>
+                        <option value="14:00 - 16:00">14:00 - 16:00</option>
+                        <option value="16:00 - 18:00">16:00 - 18:00</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="submit-button" id="submitBtn">
+                    Agendar Reunión
+                </button>
+            </form>
+        </div>
+
+        <script>
+            document.getElementById('agendarForm').addEventListener('submit', function(e) {
+                const btn = document.getElementById('submitBtn');
+                btn.disabled = true;
+                btn.textContent = 'Enviando...';
+            });
+        </script>
+    </body>
+    </html>
+    '''
+
+
 @app.route('/formulario', methods=['POST'])
 def formulario():
     """
