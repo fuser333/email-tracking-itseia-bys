@@ -114,6 +114,8 @@ def enviar_email_formulario(data):
     Envía un email con los datos del formulario a administracion@itseia.ai
     """
     try:
+        print(f"📧 Preparando email para {RECIPIENT_EMAIL}...")
+
         # Crear mensaje
         msg = MIMEMultipart('alternative')
         msg['Subject'] = f"🎯 Nueva solicitud de reunión - {data.get('institucion', 'Sin institución')}"
@@ -185,9 +187,9 @@ def enviar_email_formulario(data):
         # Adjuntar HTML
         msg.attach(MIMEText(html_content, 'html'))
 
-        # Enviar usando SSL
+        # Enviar usando SSL con timeout
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=context) as server:
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=context, timeout=10) as server:
             server.login(SENDER_EMAIL, APP_PASSWORD)
             server.send_message(msg)
 
@@ -382,16 +384,19 @@ def formulario():
         conn.commit()
         conn.close()
 
-        # Enviar email a administracion@itseia.ai
-        email_enviado = enviar_email_formulario(data)
+        print(f"✅ Datos guardados en BD para: {data.get('institucion')}")
+
+        # Intentar enviar email (con timeout corto para no bloquear)
+        try:
+            enviar_email_formulario(data)
+        except Exception as e:
+            print(f"⚠️ Error enviando notificación por email: {e}")
+            # Continuar de todas formas - lo importante es que se guardó en BD
 
         # Retornar respuesta según el tipo de request
         if request.is_json:
             # Request JSON - retornar JSON
-            if email_enviado:
-                return jsonify({'success': True, 'message': 'Solicitud recibida. Nos contactaremos pronto.'})
-            else:
-                return jsonify({'success': True, 'message': 'Solicitud guardada, pero hubo un problema enviando la notificación.'})
+            return jsonify({'success': True, 'message': 'Solicitud recibida. Nos contactaremos pronto.'})
         else:
             # Formulario HTML - retornar página de éxito
             return '''
