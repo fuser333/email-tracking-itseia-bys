@@ -187,17 +187,25 @@ def enviar_email_formulario(data):
         # Adjuntar HTML
         msg.attach(MIMEText(html_content, 'html'))
 
-        # Enviar usando SSL con timeout
+        # Enviar usando SSL con timeout más largo
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=context, timeout=10) as server:
-            server.login(SENDER_EMAIL, APP_PASSWORD)
-            server.send_message(msg)
+        print(f"🔌 Conectando a {SMTP_SERVER}:{SMTP_PORT}...")
 
-        print(f"✅ Email enviado a {RECIPIENT_EMAIL} - Institución: {data.get('institucion')}")
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=context, timeout=30) as server:
+            print(f"🔐 Autenticando con {SENDER_EMAIL}...")
+            server.login(SENDER_EMAIL, APP_PASSWORD)
+
+            print(f"📤 Enviando mensaje...")
+            server.send_message(msg)
+            print(f"✅ Email enviado exitosamente a {RECIPIENT_EMAIL}")
+
         return True
 
+    except smtplib.SMTPException as e:
+        print(f"❌ Error SMTP enviando email: {type(e).__name__} - {e}")
+        return False
     except Exception as e:
-        print(f"❌ Error enviando email: {e}")
+        print(f"❌ Error general enviando email: {type(e).__name__} - {e}")
         return False
 
 
@@ -574,12 +582,22 @@ def formulario():
 
         print(f"✅ Datos guardados en BD para: {data.get('institucion')}")
 
-        # Intentar enviar email (con timeout corto para no bloquear)
+        # Intentar enviar email de notificación
+        print("=" * 60)
+        print("INICIANDO ENVÍO DE EMAIL DE NOTIFICACIÓN")
+        print("=" * 60)
+
+        email_enviado = False
         try:
-            enviar_email_formulario(data)
+            email_enviado = enviar_email_formulario(data)
+            if email_enviado:
+                print("✅ Notificación por email enviada correctamente")
+            else:
+                print("⚠️ No se pudo enviar la notificación por email")
         except Exception as e:
-            print(f"⚠️ Error enviando notificación por email: {e}")
-            # Continuar de todas formas - lo importante es que se guardó en BD
+            print(f"⚠️ Excepción al enviar notificación: {type(e).__name__} - {e}")
+
+        print("=" * 60)
 
         # Retornar respuesta según el tipo de request
         if request.is_json:
