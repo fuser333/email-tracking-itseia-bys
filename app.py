@@ -52,6 +52,18 @@ def init_db():
                 user_agent TEXT
             )
         ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS formulario_contacto (
+                id SERIAL PRIMARY KEY,
+                nombre TEXT NOT NULL,
+                email TEXT NOT NULL,
+                institucion TEXT,
+                telefono TEXT,
+                dia TEXT,
+                horario TEXT,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
         conn.commit()
         conn.close()
         print("✅ PostgreSQL inicializado")
@@ -67,6 +79,18 @@ def init_db():
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 ip_address TEXT,
                 user_agent TEXT
+            )
+        ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS formulario_contacto (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT NOT NULL,
+                email TEXT NOT NULL,
+                institucion TEXT,
+                telefono TEXT,
+                dia TEXT,
+                horario TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         conn.commit()
@@ -207,6 +231,41 @@ def health():
         'status': 'ok',
         'database': db_type
     })
+
+
+@app.route('/formulario', methods=['POST'])
+def formulario():
+    """
+    Endpoint para recibir datos del formulario de contacto
+    """
+    try:
+        data = request.json
+
+        # Guardar en base de datos
+        conn = get_db_connection()
+
+        if USE_POSTGRES:
+            c = conn.cursor()
+            c.execute('''
+                INSERT INTO formulario_contacto (nombre, email, institucion, telefono, dia, horario, timestamp)
+                VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+            ''', (data.get('nombre'), data.get('email'), data.get('institucion'),
+                  data.get('telefono'), data.get('dia'), data.get('horario')))
+        else:
+            c = conn.cursor()
+            c.execute('''
+                INSERT INTO formulario_contacto (nombre, email, institucion, telefono, dia, horario, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+            ''', (data.get('nombre'), data.get('email'), data.get('institucion'),
+                  data.get('telefono'), data.get('dia'), data.get('horario')))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'message': 'Formulario recibido'})
+    except Exception as e:
+        print(f"Error en formulario: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 if __name__ == '__main__':
