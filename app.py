@@ -355,6 +355,12 @@ def formulario():
                 'horario': request.form.get('horario')
             }
 
+        # Asegurar que las tablas existen antes de insertar
+        try:
+            init_db()
+        except:
+            pass  # Si ya existen, continuar
+
         # Guardar en base de datos
         conn = get_db_connection()
 
