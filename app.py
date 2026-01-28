@@ -496,6 +496,18 @@ def formulario():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
+@app.route('/setup-db')
+def setup_db():
+    """
+    Endpoint para forzar la creación de tablas (ejecutar una sola vez)
+    """
+    try:
+        init_db()
+        return jsonify({'success': True, 'message': 'Database initialized successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
 if __name__ == '__main__':
     init_db()
     port = int(os.environ.get('PORT', 10000))
