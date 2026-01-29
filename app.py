@@ -349,6 +349,7 @@ def agendar_reunion():
     """
     Landing page con formulario para agendar reunión
     Esta página se abre cuando el usuario hace click en el email
+    Usa EmailJS para envío de notificaciones
     """
     return '''
     <!DOCTYPE html>
@@ -357,6 +358,15 @@ def agendar_reunion():
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Agendar Reunión - Alianza ITSEIA-BYS</title>
+
+        <!-- EmailJS SDK -->
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+        <script type="text/javascript">
+            (function(){
+                emailjs.init("A7cQPi8jRCDyLrHQr");
+            })();
+        </script>
+
         <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -522,9 +532,51 @@ def agendar_reunion():
 
         <script>
             document.getElementById('agendarForm').addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevenir submit normal
+
                 const btn = document.getElementById('submitBtn');
                 btn.disabled = true;
                 btn.textContent = 'Enviando...';
+
+                // Obtener datos del formulario
+                const formData = new FormData(this);
+                const templateParams = {
+                    nombre: formData.get('nombre'),
+                    email: formData.get('email'),
+                    institucion: formData.get('institucion'),
+                    telefono: formData.get('telefono'),
+                    dia: formData.get('dia'),
+                    horario: formData.get('horario')
+                };
+
+                console.log('📧 Enviando con EmailJS...', templateParams);
+
+                // Enviar con EmailJS
+                emailjs.send('service_yqv4dts', 'template_alianza_itseia_', templateParams)
+                    .then(function(response) {
+                        console.log('✅ EmailJS SUCCESS!', response.status, response.text);
+
+                        // Ahora guardar en nuestra base de datos
+                        return fetch('/formulario', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(templateParams)
+                        });
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('✅ Guardado en BD:', data);
+                        // Redirigir a página de éxito
+                        window.location.href = '/formulario-enviado';
+                    })
+                    .catch(function(error) {
+                        console.error('❌ ERROR:', error);
+                        alert('Hubo un error al enviar el formulario. Por favor intente nuevamente o contáctenos directamente.');
+                        btn.disabled = false;
+                        btn.textContent = 'Agendar Reunión';
+                    });
             });
         </script>
     </body>
@@ -582,22 +634,9 @@ def formulario():
 
         print(f"✅ Datos guardados en BD para: {data.get('institucion')}")
 
-        # Intentar enviar email de notificación
-        print("=" * 60)
-        print("INICIANDO ENVÍO DE EMAIL DE NOTIFICACIÓN")
-        print("=" * 60)
-
-        email_enviado = False
-        try:
-            email_enviado = enviar_email_formulario(data)
-            if email_enviado:
-                print("✅ Notificación por email enviada correctamente")
-            else:
-                print("⚠️ No se pudo enviar la notificación por email")
-        except Exception as e:
-            print(f"⚠️ Excepción al enviar notificación: {type(e).__name__} - {e}")
-
-        print("=" * 60)
+        # EmailJS se encarga del envío de notificaciones desde el frontend
+        # Ya no necesitamos enviar SMTP desde el backend
+        print("📧 Email de notificación enviado por EmailJS desde el cliente")
 
         # Retornar respuesta según el tipo de request
         if request.is_json:
@@ -711,6 +750,116 @@ def formulario():
     except Exception as e:
         print(f"Error en formulario: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/formulario-enviado')
+def formulario_enviado():
+    """
+    Página de confirmación después de enviar el formulario
+    """
+    return '''
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Solicitud Recibida - ITSEIA</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+                background: linear-gradient(135deg, #1F2F58 0%, #22D3EE 100%);
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+            }
+            .container {
+                background: white;
+                max-width: 500px;
+                padding: 50px 40px;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                text-align: center;
+            }
+            .checkmark {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #0BDD0F 0%, #22D3EE 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 30px;
+                font-size: 48px;
+                color: white;
+                box-shadow: 0 8px 24px rgba(11, 221, 15, 0.4);
+            }
+            h1 {
+                color: #1F2F58;
+                font-size: 28px;
+                margin: 0 0 15px 0;
+                font-weight: 800;
+            }
+            p {
+                color: #334155;
+                font-size: 16px;
+                line-height: 1.6;
+                margin: 15px 0;
+            }
+            .highlight {
+                background: #E8F5E9;
+                padding: 20px;
+                border-radius: 12px;
+                margin: 25px 0;
+                border-left: 4px solid #0BDD0F;
+            }
+            .highlight strong {
+                color: #1F2F58;
+                font-size: 18px;
+            }
+            .contact {
+                margin-top: 30px;
+                padding-top: 25px;
+                border-top: 2px solid #E0E7FF;
+                font-size: 14px;
+                color: #64748b;
+            }
+            .contact a {
+                color: #22D3EE;
+                text-decoration: none;
+                font-weight: 600;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="checkmark">✓</div>
+            <h1>¡Solicitud Recibida Exitosamente!</h1>
+            <p>Gracias por su interés en la <strong>Alianza Estratégica ITSEIA - Liceo BYS</strong>.</p>
+
+            <div class="highlight">
+                <strong>📞 Nos contactaremos con usted</strong><br>
+                dentro de las próximas <strong>24 horas</strong> para confirmar su reunión.
+            </div>
+
+            <p>Hemos registrado su solicitud y enviado una notificación a nuestro equipo.</p>
+
+            <div class="contact">
+                <p><strong>Información de Contacto:</strong></p>
+                <p>📧 <a href="mailto:administracion@itseia.ai">administracion@itseia.ai</a></p>
+                <p>📱 WhatsApp: <a href="https://wa.me/593959892034">+593 95 989 2034</a></p>
+                <p>🌐 <a href="https://itseia.ai" target="_blank">www.itseia.ai</a></p>
+            </div>
+
+            <p style="margin-top: 30px; font-size: 12px; color: #94a3b8;">
+                Puede cerrar esta ventana
+            </p>
+        </div>
+    </body>
+    </html>
+    '''
 
 
 @app.route('/setup-db')
